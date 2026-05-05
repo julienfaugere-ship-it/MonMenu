@@ -346,7 +346,7 @@ footer{text-align:center;padding:20px 16px;background:var(--ink);color:var(--ink
 
     <!-- Barre de recherche -->
     <div style="display:flex;gap:8px;margin-bottom:12px;align-items:stretch;">
-      <input type="search" class="search-input" placeholder="🔍 Rechercher une recette..." id="recipe-search" oninput="renderRecipes()" style="flex:1;">
+      <input type="search" class="search-input" placeholder="🔍 Rechercher une recette..." id="recipe-search" oninput="onRecipeSearch()" style="flex:1;">
       <button class="btn-add-recipe" onclick="openRecipeModal()">+ Ajouter</button>
     </div>
 
@@ -657,7 +657,11 @@ async function seedIfEmpty(){
 function startListeners(){
   onSnapshot(recipesCol,(snap)=>{
     state.recipes=snap.docs.map(d=>({id:d.id,...d.data()}));
-    renderRecipes();renderTrends();
+    // Ne re-render que si on est sur la vue recettes, en préservant la recherche
+    if(document.getElementById('view-recipes')?.classList.contains('active')){
+      renderRecipes();
+    }
+    renderTrends();
   });
   onSnapshot(mealsCol,(snap)=>{
     state.meals={};
@@ -929,8 +933,13 @@ window.setAppFilter = function(btn){
   renderRecipes();
 };
 
+window.onRecipeSearch = function(){
+  renderRecipes();
+};
+
 function renderRecipes(){
-  const q=(document.getElementById('recipe-search')?.value||'').toLowerCase().trim();
+  const searchEl = document.getElementById('recipe-search');
+  const q = searchEl ? searchEl.value.toLowerCase().trim() : '';
   const cat = recipeFilters.cat;
   const app = recipeFilters.app;
 
