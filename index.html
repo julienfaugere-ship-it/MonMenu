@@ -124,10 +124,12 @@ main{max-width:1400px;margin:0 auto;padding:1.5rem;}
 .pill-soir{background:rgba(192,96,58,0.13);color:var(--terra-dark);}
 
 /* RECIPES */
-.recipes-toolbar{display:flex;gap:8px;margin-bottom:1.2rem;align-items:stretch;flex-wrap:wrap;}
+.filter-pills-wrap{display:flex;gap:6px;flex-wrap:wrap;}
+.filter-pill{padding:7px 13px;border-radius:20px;border:1.5px solid var(--border);background:var(--white);font-family:'DM Sans',sans-serif;font-size:0.82rem;cursor:pointer;transition:all 0.18s;color:var(--ink-muted);white-space:nowrap;touch-action:manipulation;}
+.filter-pill:active{transform:scale(0.96);}
+.filter-pill.active{border-color:var(--terracotta);background:rgba(192,96,58,0.1);color:var(--terra-dark);font-weight:600;}
 .search-input{flex:1;min-width:140px;padding:11px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:1rem;background:var(--white);color:var(--ink);}
 .search-input:focus{outline:none;border-color:var(--terracotta);}
-select.filter-select{padding:11px 10px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.85rem;background:var(--white);color:var(--ink);cursor:pointer;}
 .btn-add-recipe{background:var(--terracotta);color:white;border:none;padding:11px 16px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.88rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap;touch-action:manipulation;}
 .btn-add-recipe:active{background:var(--terra-dark);transform:scale(0.97);}
 .recipes-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px;}
@@ -341,23 +343,46 @@ footer{text-align:center;padding:20px 16px;background:var(--ink);color:var(--ink
 
   <div class="view" id="view-recipes">
     <div class="page-header"><h1 class="page-title">Livre de recettes</h1><p class="page-sub">Retrouvez et notez vos plats</p></div>
-    <div class="recipes-toolbar">
-      <input type="search" class="search-input" placeholder="🔍 Rechercher..." id="recipe-search" oninput="renderRecipes()">
-      <select class="filter-select" id="recipe-cat" onchange="renderRecipes()">
-        <option value="">Toutes catégories</option>
-        <option value="Viande">🥩 Viande</option><option value="Poisson">🐟 Poisson</option>
-        <option value="Végétarien">🥦 Végétarien</option><option value="Pâtes">🍝 Pâtes</option>
-        <option value="Soupe">🍲 Soupe</option><option value="Pizza">🍕 Pizza</option>
-        <option value="Salade">🥗 Salade</option><option value="Autre">✨ Autre</option>
-      </select>
-      <select class="filter-select" id="recipe-app" onchange="renderRecipes()">
-        <option value="">Tous appareils</option>
-        <option value="Thermomix">🤖 Thermomix</option><option value="Cookeo">⚡ Cookeo</option>
-        <option value="Plancha">🔥 Plancha</option><option value="Four">🫙 Four</option>
-        <option value="Airfryer">💨 Airfryer</option>
-      </select>
+
+    <!-- Barre de recherche -->
+    <div style="display:flex;gap:8px;margin-bottom:12px;align-items:stretch;">
+      <input type="search" class="search-input" placeholder="🔍 Rechercher une recette..." id="recipe-search" oninput="renderRecipes()" style="flex:1;">
       <button class="btn-add-recipe" onclick="openRecipeModal()">+ Ajouter</button>
     </div>
+
+    <!-- Filtres catégories -->
+    <div style="margin-bottom:8px;">
+      <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);font-weight:600;margin-bottom:6px;">Catégorie</div>
+      <div class="filter-pills-wrap" id="filter-cats">
+        <button class="filter-pill active" data-val="" onclick="setCatFilter(this)">Toutes</button>
+        <button class="filter-pill" data-val="Viande" onclick="setCatFilter(this)">🥩 Viande</button>
+        <button class="filter-pill" data-val="Poisson" onclick="setCatFilter(this)">🐟 Poisson</button>
+        <button class="filter-pill" data-val="Végétarien" onclick="setCatFilter(this)">🥦 Végétarien</button>
+        <button class="filter-pill" data-val="Pâtes" onclick="setCatFilter(this)">🍝 Pâtes</button>
+        <button class="filter-pill" data-val="Soupe" onclick="setCatFilter(this)">🍲 Soupe</button>
+        <button class="filter-pill" data-val="Pizza" onclick="setCatFilter(this)">🍕 Pizza</button>
+        <button class="filter-pill" data-val="Salade" onclick="setCatFilter(this)">🥗 Salade</button>
+        <button class="filter-pill" data-val="Autre" onclick="setCatFilter(this)">✨ Autre</button>
+      </div>
+    </div>
+
+    <!-- Filtres appareils -->
+    <div style="margin-bottom:16px;">
+      <div style="font-size:0.7rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);font-weight:600;margin-bottom:6px;">Appareil</div>
+      <div class="filter-pills-wrap" id="filter-apps">
+        <button class="filter-pill active" data-val="" onclick="setAppFilter(this)">Tous</button>
+        <button class="filter-pill" data-val="Thermomix" onclick="setAppFilter(this)">🤖 Thermomix</button>
+        <button class="filter-pill" data-val="Cookeo" onclick="setAppFilter(this)">⚡ Cookeo</button>
+        <button class="filter-pill" data-val="Plancha" onclick="setAppFilter(this)">🔥 Plancha</button>
+        <button class="filter-pill" data-val="Four" onclick="setAppFilter(this)">🫙 Four</button>
+        <button class="filter-pill" data-val="Airfryer" onclick="setAppFilter(this)">💨 Airfryer</button>
+        <button class="filter-pill" data-val="classique" onclick="setAppFilter(this)">🍳 Classique</button>
+      </div>
+    </div>
+
+    <!-- Compteur résultats -->
+    <div id="recipe-count-label" style="font-size:0.8rem;color:var(--ink-muted);margin-bottom:12px;"></div>
+
     <div class="recipes-grid" id="recipes-grid"></div>
   </div>
 
@@ -888,25 +913,59 @@ async function applyRecurrence(ds,type,recipe,persons,freq,appareil,slotIndex){
 }
 
 // ===== RECIPES =====
+let recipeFilters = { cat: '', app: '' };
+
+window.setCatFilter = function(btn){
+  document.querySelectorAll('#filter-cats .filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  recipeFilters.cat = btn.dataset.val;
+  renderRecipes();
+};
+
+window.setAppFilter = function(btn){
+  document.querySelectorAll('#filter-apps .filter-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  recipeFilters.app = btn.dataset.val;
+  renderRecipes();
+};
+
 function renderRecipes(){
-  const q=document.getElementById('recipe-search')?.value.toLowerCase()||'';
-  const cat=document.getElementById('recipe-cat')?.value||'';
-  const app=document.getElementById('recipe-app')?.value||'';
+  const q=(document.getElementById('recipe-search')?.value||'').toLowerCase().trim();
+  const cat = recipeFilters.cat;
+  const app = recipeFilters.app;
+
   const filtered=state.recipes.filter(r=>{
-    if(q&&!r.name.toLowerCase().includes(q))return false;
-    if(cat&&r.cat!==cat)return false;
-    if(app&&(r.appareil||'')!==app)return false;
+    if(q && !r.name.toLowerCase().includes(q) && !(r.cat||'').toLowerCase().includes(q)) return false;
+    if(cat && r.cat!==cat) return false;
+    if(app==='classique' && (r.appareil||'')!=='') return false;
+    if(app && app!=='classique' && (r.appareil||'')!==app) return false;
     return true;
   });
-  const grid=document.getElementById('recipes-grid');if(!grid)return;
-  if(!filtered.length){grid.innerHTML='<p style="color:var(--ink-muted);padding:20px">Aucune recette trouvée.</p>';return;}
+
+  const grid=document.getElementById('recipes-grid');
+  const counter=document.getElementById('recipe-count-label');
+  if(!grid)return;
+
+  // Compteur
+  if(counter){
+    const total=state.recipes.length;
+    counter.textContent = filtered.length===total
+      ? `${total} recette${total>1?'s':''} au total`
+      : `${filtered.length} résultat${filtered.length>1?'s':''} sur ${total}`;
+  }
+
+  if(!filtered.length){
+    grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:40px 20px;color:var(--ink-muted);"><div style="font-size:2.5rem;margin-bottom:12px;">🔍</div><div style="font-size:1rem;font-weight:500;">Aucune recette trouvée</div><div style="font-size:0.85rem;margin-top:6px;">Essayez un autre filtre ou ajoutez cette recette !</div></div>';
+    return;
+  }
+
   const bgs={Viande:'#FAECE7',Poisson:'#E6F1FB',Végétarien:'#EAF3DE',Pâtes:'#FDF8F2',Soupe:'#F0EDD8',Pizza:'#FAECE7',Salade:'#EAF3DE',Autre:'#F5ECD7'};
   grid.innerHTML=filtered.map(r=>{
-    const stars='★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
+    const stars='★'.repeat(r.rating||0)+'☆'.repeat(5-(r.rating||0));
     const fav=(r.favPersons||[]).map(pid=>{const p=personById(pid);return p?`<div class="mini-avatar" style="background:${p.color};width:18px;height:18px;font-size:0.54rem">${p.initials}</div>`:''}).join('');
     const appTag=r.appareil?`<span class="appareil-tag">${APP_ICONS[r.appareil]||''} ${r.appareil}</span>`:'';
     return`<div class="recipe-card">
-      <div class="recipe-img" style="background:${bgs[r.cat]||'#F5ECD7'}" >
+      <div class="recipe-img" style="background:${bgs[r.cat]||'#F5ECD7'}">
         ${r.emoji}
         <button class="recipe-del-btn" onclick="event.stopPropagation();deleteRecipe('${r.id}')" title="Supprimer">🗑️</button>
       </div>
