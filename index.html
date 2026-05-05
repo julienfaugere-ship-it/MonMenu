@@ -362,7 +362,13 @@ footer{text-align:center;padding:20px 16px;background:var(--ink);color:var(--ink
   </div>
 
   <div class="view" id="view-persons">
-    <div class="page-header"><h1 class="page-title">Notre famille</h1><p class="page-sub">Préférences de chacun</p></div>
+    <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+      <div>
+        <h1 class="page-title">Notre famille</h1>
+        <p class="page-sub">Gérez les préférences de chacun</p>
+      </div>
+      <button onclick="clearAllFavs()" style="background:none;border:1px solid var(--border);padding:8px 14px;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:0.82rem;color:var(--ink-muted);cursor:pointer;touch-action:manipulation;">🗑️ Vider tous les favoris</button>
+    </div>
     <div class="persons-grid" id="persons-grid"></div>
   </div>
 
@@ -594,10 +600,10 @@ async function seedIfEmpty(){
   for(const r of defaultRecipes) await setDoc(doc(db,'recipes',r.id),r);
 
   const defaultPersons={
-    charlotte:{favs:['Poulet rôti aux herbes','Pizza maison','Salade César']},
-    julien:{favs:['Bœuf bourguignon','Spaghetti Bolognaise','Tacos maison']},
-    lou:{favs:['Pizza maison','Spaghetti Bolognaise','Tacos maison']},
-    timeo:{favs:['Pizza maison','Tacos maison','Spaghetti Bolognaise']}
+    charlotte:{favs:[]},
+    julien:{favs:[]},
+    lou:{favs:[]},
+    timeo:{favs:[]}
   };
   for(const[pid,data] of Object.entries(defaultPersons)) await setDoc(doc(db,'persons',pid),data);
 
@@ -624,28 +630,34 @@ async function seedIfEmpty(){
 
 // ===== ÉCOUTE TEMPS RÉEL =====
 function startListeners(){
-  // Recettes
   onSnapshot(recipesCol,(snap)=>{
     state.recipes=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderRecipes();renderTrends();
   });
-  // Repas
   onSnapshot(mealsCol,(snap)=>{
     state.meals={};
     snap.docs.forEach(d=>{state.meals[d.id]=d.data();});
     renderWeek();renderMonth();renderTrends();
   });
-  // Personnes
   onSnapshot(personsCol,(snap)=>{
     snap.docs.forEach(d=>{if(state.persons[d.id])state.persons[d.id]=d.data();});
     renderPersons();
   });
-  // Courses
   onSnapshot(coursesCol,(snap)=>{
     state.courses=snap.docs.map(d=>({id:d.id,...d.data()}));
     renderCourses();
   });
 }
+
+// Vide tous les favoris dans Firebase (appelé une fois manuellement)
+window.clearAllFavs=async function(){
+  if(!confirm('Vider tous les favoris de la famille ?'))return;
+  showSync('Mise à jour…');
+  for(const p of PERSONS){
+    await setDoc(doc(db,'persons',p.id),{favs:[]});
+  }
+  showToast('Favoris vidés ✓');
+};
 
 // ===== INIT =====
 async function init(){
