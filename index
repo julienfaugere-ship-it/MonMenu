@@ -1,0 +1,964 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MonMenu 🍽️</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FDF8F2;
+    --warm: #F5ECD7;
+    --terracotta: #C0603A;
+    --terra-light: #E8855E;
+    --terra-dark: #8B3A1F;
+    --sage: #6B8F71;
+    --sage-light: #A8C5AB;
+    --sage-dark: #3D5940;
+    --gold: #D4A843;
+    --gold-light: #F0D080;
+    --ink: #2C2416;
+    --ink-muted: #7A6E60;
+    --ink-light: #B5A898;
+    --white: #FFFFFF;
+    --border: rgba(44,36,22,0.12);
+    --shadow: 0 4px 24px rgba(44,36,22,0.10);
+    --shadow-sm: 0 2px 8px rgba(44,36,22,0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .logo { font-family: 'Playfair Display', serif; font-size: 1.5rem; display:flex; align-items:center; gap:10px; }
+  .logo-icon { font-size:1.8rem; }
+  nav { display:flex; gap:4px; }
+  nav button {
+    background: none; border: none; color: var(--ink-light);
+    padding: 8px 16px; border-radius: 8px; cursor:pointer;
+    font-family: 'DM Sans', sans-serif; font-size: 0.9rem; font-weight:500;
+    transition: all 0.2s;
+  }
+  nav button:hover { color: var(--cream); background: rgba(255,255,255,0.1); }
+  nav button.active { color: var(--gold); background: rgba(212,168,67,0.15); }
+
+  /* MAIN LAYOUT */
+  main { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+
+  /* VIEWS */
+  .view { display:none; }
+  .view.active { display:block; }
+
+  /* PAGE TITLES */
+  .page-header { margin-bottom:2rem; }
+  .page-title { font-family:'Playfair Display',serif; font-size:2rem; color:var(--ink); margin-bottom:0.3rem; }
+  .page-sub { color:var(--ink-muted); font-size:0.95rem; }
+
+  /* WEEK PLANNER */
+  .week-controls {
+    display:flex; align-items:center; gap:16px; margin-bottom:1.5rem;
+    background:var(--white); border-radius:var(--radius-sm); padding:14px 20px;
+    border: 1px solid var(--border); box-shadow: var(--shadow-sm);
+  }
+  .week-nav { background:none; border:1px solid var(--border); border-radius:8px; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1.1rem; transition:all 0.2s; }
+  .week-nav:hover { background:var(--warm); border-color:var(--terracotta); }
+  .week-label { font-weight:500; font-size:1rem; flex:1; text-align:center; }
+  .week-persons { display:flex; gap:8px; }
+  .person-filter {
+    display:flex; align-items:center; gap:6px; padding:6px 12px;
+    border-radius:20px; border:1.5px solid transparent; cursor:pointer;
+    font-size:0.82rem; font-weight:500; transition:all 0.2s; background:var(--warm);
+  }
+  .person-filter.active { border-color:currentColor; }
+  .person-avatar { width:22px; height:22px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.65rem; font-weight:700; color:white; }
+
+  .week-grid { display:grid; grid-template-columns: repeat(7, 1fr); gap:12px; }
+  .day-col { display:flex; flex-direction:column; gap:8px; }
+  .day-header { text-align:center; padding:10px 0; }
+  .day-name { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-muted); font-weight:600; }
+  .day-num { font-family:'Playfair Display',serif; font-size:1.6rem; color:var(--ink); line-height:1; }
+  .day-col.today .day-num { color:var(--terracotta); }
+  .day-col.today .day-name { color:var(--terracotta); }
+
+  .meal-slot {
+    background:var(--white); border-radius:var(--radius-sm); border:1px solid var(--border);
+    padding:10px; min-height:90px; cursor:pointer; transition:all 0.2s; position:relative;
+  }
+  .meal-slot:hover { border-color:var(--terracotta); box-shadow: 0 2px 12px rgba(192,96,58,0.15); transform: translateY(-1px); }
+  .meal-slot.filled { border-color: var(--sage-light); }
+  .meal-type-label { font-size:0.68rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-light); font-weight:600; margin-bottom:6px; display:flex; align-items:center; gap:4px; }
+  .meal-name { font-size:0.85rem; font-weight:500; color:var(--ink); line-height:1.3; }
+  .meal-persons-icons { display:flex; gap:2px; margin-top:6px; flex-wrap:wrap; }
+  .mini-avatar { width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.5rem; font-weight:700; color:white; }
+  .add-meal-btn { display:flex; align-items:center; justify-content:center; color:var(--ink-light); height:30px; font-size:1.3rem; }
+  .meal-slot .rating-stars { font-size:0.7rem; margin-top:4px; }
+
+  /* MONTH VIEW */
+  .month-controls {
+    display:flex; align-items:center; gap:16px; margin-bottom:1.5rem;
+    background:var(--white); border-radius:var(--radius-sm); padding:14px 20px;
+    border:1px solid var(--border); box-shadow:var(--shadow-sm);
+  }
+  .month-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; background:var(--border); border-radius:var(--radius); overflow:hidden; border:1px solid var(--border); }
+  .month-day-header { background:var(--ink); color:var(--gold); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.1em; font-weight:600; padding:10px 0; text-align:center; }
+  .month-day { background:var(--white); padding:10px; min-height:100px; cursor:pointer; transition:all 0.2s; }
+  .month-day:hover { background:var(--warm); }
+  .month-day.other-month { background: var(--cream); }
+  .month-day.today-month { background: rgba(192,96,58,0.06); }
+  .month-day-num { font-size:0.85rem; font-weight:600; color:var(--ink-muted); margin-bottom:6px; }
+  .month-day.today-month .month-day-num { color:var(--terracotta); font-weight:700; }
+  .month-meal-pill {
+    font-size:0.68rem; padding:2px 7px; border-radius:20px; margin-bottom:2px;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:100%;
+    display:block;
+  }
+  .pill-midi { background:rgba(107,143,113,0.15); color:var(--sage-dark); }
+  .pill-soir { background:rgba(192,96,58,0.12); color:var(--terra-dark); }
+
+  /* RECIPES */
+  .recipes-toolbar { display:flex; gap:12px; margin-bottom:1.5rem; align-items:center; flex-wrap:wrap; }
+  .search-input { flex:1; min-width:200px; padding:10px 16px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:0.95rem; background:var(--white); color:var(--ink); }
+  .search-input:focus { outline:none; border-color:var(--terracotta); }
+  select.filter-select { padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:0.9rem; background:var(--white); color:var(--ink); cursor:pointer; }
+  .btn-add-recipe { background:var(--terracotta); color:white; border:none; padding:10px 20px; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:0.9rem; font-weight:600; cursor:pointer; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+  .btn-add-recipe:hover { background:var(--terra-dark); }
+
+  .recipes-grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap:16px; }
+  .recipe-card {
+    background:var(--white); border-radius:var(--radius); border:1px solid var(--border);
+    overflow:hidden; cursor:pointer; transition:all 0.25s; box-shadow:var(--shadow-sm);
+  }
+  .recipe-card:hover { transform:translateY(-3px); box-shadow:var(--shadow); border-color:var(--terra-light); }
+  .recipe-img { height:140px; display:flex; align-items:center; justify-content:center; font-size:4rem; position:relative; }
+  .recipe-body { padding:16px; }
+  .recipe-category { font-size:0.72rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--sage); font-weight:600; margin-bottom:6px; }
+  .recipe-title { font-family:'Playfair Display',serif; font-size:1.1rem; margin-bottom:8px; line-height:1.3; }
+  .recipe-meta { display:flex; justify-content:space-between; align-items:center; }
+  .stars { color:var(--gold); font-size:0.9rem; letter-spacing:1px; }
+  .recipe-count { font-size:0.8rem; color:var(--ink-muted); }
+  .recipe-fav-persons { display:flex; gap:4px; margin-top:8px; }
+
+  /* PERSONS */
+  .persons-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:20px; }
+  .person-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:24px; box-shadow:var(--shadow-sm); }
+  .person-header { display:flex; align-items:center; gap:16px; margin-bottom:20px; }
+  .person-big-avatar { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.5rem; font-weight:700; color:white; flex-shrink:0; }
+  .person-info h3 { font-family:'Playfair Display',serif; font-size:1.3rem; }
+  .person-info p { color:var(--ink-muted); font-size:0.85rem; }
+  .fav-section h4 { font-size:0.8rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-muted); font-weight:600; margin-bottom:10px; }
+  .fav-tag { display:inline-block; padding:5px 12px; border-radius:20px; background:var(--warm); font-size:0.82rem; margin:3px; border:1px solid var(--border); cursor:pointer; }
+  .add-fav { background:none; border:1.5px dashed var(--border); padding:5px 12px; border-radius:20px; font-size:0.82rem; cursor:pointer; color:var(--ink-muted); font-family:'DM Sans',sans-serif; margin:3px; }
+  .add-fav:hover { border-color:var(--terracotta); color:var(--terracotta); }
+  .person-stats { margin-top:16px; display:flex; gap:12px; }
+  .stat-box { flex:1; text-align:center; background:var(--cream); border-radius:var(--radius-sm); padding:12px 8px; }
+  .stat-num { font-family:'Playfair Display',serif; font-size:1.4rem; color:var(--terracotta); }
+  .stat-label { font-size:0.72rem; color:var(--ink-muted); }
+
+  /* TRENDS */
+  .trends-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px; }
+  .trend-card { background:var(--white); border-radius:var(--radius); border:1px solid var(--border); padding:20px; box-shadow:var(--shadow-sm); }
+  .trend-title { font-family:'Playfair Display',serif; font-size:1.1rem; margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+  .trend-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .trend-rank { width:24px; height:24px; border-radius:50%; background:var(--warm); display:flex; align-items:center; justify-content:center; font-size:0.75rem; font-weight:700; color:var(--ink-muted); flex-shrink:0; }
+  .trend-rank.gold { background:var(--gold); color:white; }
+  .trend-rank.silver { background:var(--ink-light); color:white; }
+  .trend-rank.bronze { background:#CD7F32; color:white; }
+  .trend-name { flex:1; font-size:0.9rem; }
+  .trend-bar-wrap { width:100px; height:8px; background:var(--warm); border-radius:4px; overflow:hidden; }
+  .trend-bar { height:100%; border-radius:4px; background:var(--terracotta); transition:width 0.6s; }
+  .trend-score { font-size:0.85rem; font-weight:600; color:var(--terracotta); min-width:32px; text-align:right; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; inset:0; background:rgba(44,36,22,0.55); z-index:1000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+  .modal-overlay.open { display:flex; }
+  .modal { background:var(--white); border-radius:var(--radius); max-width:520px; width:90%; max-height:85vh; overflow-y:auto; box-shadow: 0 20px 60px rgba(44,36,22,0.25); }
+  .modal-header { padding:24px 28px 0; display:flex; align-items:flex-start; justify-content:space-between; }
+  .modal-title { font-family:'Playfair Display',serif; font-size:1.4rem; }
+  .modal-close { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--ink-muted); padding:4px; line-height:1; }
+  .modal-body { padding:20px 28px 28px; }
+  .form-group { margin-bottom:16px; }
+  .form-label { display:block; font-size:0.82rem; font-weight:600; text-transform:uppercase; letter-spacing:0.08em; color:var(--ink-muted); margin-bottom:6px; }
+  .form-input { width:100%; padding:10px 14px; border:1px solid var(--border); border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-size:0.95rem; color:var(--ink); background:var(--cream); }
+  .form-input:focus { outline:none; border-color:var(--terracotta); background:var(--white); }
+  .form-row { display:flex; gap:12px; }
+  .form-row .form-group { flex:1; }
+  .persons-checkboxes { display:flex; gap:8px; flex-wrap:wrap; }
+  .person-check { display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:20px; border:1.5px solid var(--border); cursor:pointer; transition:all 0.2s; font-size:0.85rem; }
+  .person-check.selected { border-color:currentColor; }
+  .star-rating { display:flex; gap:4px; }
+  .star-btn { background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--border); transition:color 0.15s; }
+  .star-btn.lit { color:var(--gold); }
+  .emoji-picker { display:flex; gap:8px; flex-wrap:wrap; }
+  .emoji-btn { font-size:1.8rem; padding:6px; border-radius:8px; border:1.5px solid transparent; cursor:pointer; background:none; transition:all 0.2s; }
+  .emoji-btn:hover, .emoji-btn.selected { border-color:var(--terracotta); background:var(--warm); }
+  .modal-actions { display:flex; gap:12px; justify-content:flex-end; margin-top:20px; }
+  .btn-cancel { background:none; border:1px solid var(--border); padding:10px 20px; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; cursor:pointer; }
+  .btn-save { background:var(--terracotta); color:white; border:none; padding:10px 24px; border-radius:var(--radius-sm); font-family:'DM Sans',sans-serif; font-weight:600; cursor:pointer; }
+  .btn-save:hover { background:var(--terra-dark); }
+
+  /* TOAST */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--cream); padding:14px 20px; border-radius:var(--radius-sm); font-size:0.9rem; z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; pointer-events:none; }
+  .toast.show { transform:translateY(0); opacity:1; }
+
+  /* RECURRENCE BADGE */
+  .recurrence-badge { position:absolute; top:6px; right:6px; background:var(--gold); color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:700; }
+
+  /* STATS ROW */
+  .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:2rem; }
+  .stat-card { background:var(--white); border-radius:var(--radius); padding:20px; border:1px solid var(--border); box-shadow:var(--shadow-sm); }
+  .stat-card-icon { font-size:1.8rem; margin-bottom:8px; }
+  .stat-card-num { font-family:'Playfair Display',serif; font-size:2rem; color:var(--terracotta); }
+  .stat-card-label { font-size:0.82rem; color:var(--ink-muted); margin-top:2px; }
+
+  @media (max-width:900px) {
+    .week-grid { grid-template-columns: repeat(4,1fr); }
+    .trends-grid { grid-template-columns:1fr; }
+    .stats-row { grid-template-columns:repeat(2,1fr); }
+  }
+  @media (max-width:600px) {
+    .week-grid { grid-template-columns: repeat(2,1fr); }
+    main { padding:1rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span class="logo-icon">🍽️</span>
+    MonMenu
+  </div>
+  <nav>
+    <button class="active" onclick="showView('week')">Semaine</button>
+    <button onclick="showView('month')">Mois</button>
+    <button onclick="showView('recipes')">Recettes</button>
+    <button onclick="showView('persons')">Famille</button>
+    <button onclick="showView('trends')">Tendances</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- WEEK VIEW -->
+  <div class="view active" id="view-week">
+    <div class="page-header">
+      <h1 class="page-title">Planning de la semaine</h1>
+      <p class="page-sub">Cliquez sur un repas pour le modifier ou en ajouter un</p>
+    </div>
+    <div class="week-controls">
+      <button class="week-nav" onclick="changeWeek(-1)">&#8592;</button>
+      <span class="week-label" id="week-label"></span>
+      <button class="week-nav" onclick="changeWeek(1)">&#8594;</button>
+      <div class="week-persons" id="week-persons-filter"></div>
+    </div>
+    <div class="week-grid" id="week-grid"></div>
+  </div>
+
+  <!-- MONTH VIEW -->
+  <div class="view" id="view-month">
+    <div class="page-header">
+      <h1 class="page-title">Planning du mois</h1>
+      <p class="page-sub">Vue d'ensemble de tous vos repas planifiés</p>
+    </div>
+    <div class="month-controls">
+      <button class="week-nav" onclick="changeMonth(-1)">&#8592;</button>
+      <span class="week-label" id="month-label"></span>
+      <button class="week-nav" onclick="changeMonth(1)">&#8594;</button>
+    </div>
+    <div class="month-grid" id="month-grid"></div>
+  </div>
+
+  <!-- RECIPES VIEW -->
+  <div class="view" id="view-recipes">
+    <div class="page-header">
+      <h1 class="page-title">Livre de recettes</h1>
+      <p class="page-sub">Notez vos plats et retrouvez vos favoris</p>
+    </div>
+    <div class="recipes-toolbar">
+      <input type="text" class="search-input" placeholder="🔍 Rechercher une recette..." id="recipe-search" oninput="renderRecipes()">
+      <select class="filter-select" id="recipe-cat" onchange="renderRecipes()">
+        <option value="">Toutes catégories</option>
+        <option value="Viande">🥩 Viande</option>
+        <option value="Poisson">🐟 Poisson</option>
+        <option value="Végétarien">🥦 Végétarien</option>
+        <option value="Pâtes">🍝 Pâtes</option>
+        <option value="Soupe">🍲 Soupe</option>
+        <option value="Pizza">🍕 Pizza</option>
+        <option value="Salade">🥗 Salade</option>
+        <option value="Autre">✨ Autre</option>
+      </select>
+      <button class="btn-add-recipe" onclick="openRecipeModal()">+ Ajouter une recette</button>
+    </div>
+    <div class="recipes-grid" id="recipes-grid"></div>
+  </div>
+
+  <!-- PERSONS VIEW -->
+  <div class="view" id="view-persons">
+    <div class="page-header">
+      <h1 class="page-title">Notre famille</h1>
+      <p class="page-sub">Gérez les préférences de chacun</p>
+    </div>
+    <div class="persons-grid" id="persons-grid"></div>
+  </div>
+
+  <!-- TRENDS VIEW -->
+  <div class="view" id="view-trends">
+    <div class="page-header">
+      <h1 class="page-title">Tendances & Statistiques</h1>
+      <p class="page-sub">Analysez vos habitudes alimentaires</p>
+    </div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="trends-grid" id="trends-grid"></div>
+  </div>
+
+</main>
+
+<!-- MEAL MODAL -->
+<div class="modal-overlay" id="meal-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title" id="meal-modal-title">Planifier un repas</h2>
+      <button class="modal-close" onclick="closeMealModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Plat</label>
+        <input class="form-input" id="meal-recipe-search" placeholder="Chercher ou écrire un plat..." oninput="filterMealRecipes()" autocomplete="off">
+        <div id="meal-recipe-suggestions" style="background:var(--white);border:1px solid var(--border);border-radius:var(--radius-sm);max-height:180px;overflow-y:auto;display:none;margin-top:4px;"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Participants</label>
+        <div class="persons-checkboxes" id="meal-persons"></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note du repas</label>
+        <div class="star-rating" id="meal-stars">
+          <button class="star-btn" data-v="1" onclick="setMealStar(1)">★</button>
+          <button class="star-btn" data-v="2" onclick="setMealStar(2)">★</button>
+          <button class="star-btn" data-v="3" onclick="setMealStar(3)">★</button>
+          <button class="star-btn" data-v="4" onclick="setMealStar(4)">★</button>
+          <button class="star-btn" data-v="5" onclick="setMealStar(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Récurrence</label>
+        <select class="form-input" id="meal-recurrence">
+          <option value="">Aucune</option>
+          <option value="weekly">Chaque semaine</option>
+          <option value="biweekly">Toutes les 2 semaines</option>
+          <option value="monthly">1x par mois</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeMealModal()">Annuler</button>
+        <button class="btn-cancel" id="meal-del-btn" onclick="deleteMeal()" style="color:var(--terracotta);display:none;">Supprimer</button>
+        <button class="btn-save" onclick="saveMeal()">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- RECIPE MODAL -->
+<div class="modal-overlay" id="recipe-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 class="modal-title">Nouvelle recette</h2>
+      <button class="modal-close" onclick="closeRecipeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nom du plat</label>
+        <input class="form-input" id="r-name" placeholder="Ex: Poulet rôti aux herbes">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-input" id="r-cat">
+            <option value="Viande">🥩 Viande</option>
+            <option value="Poisson">🐟 Poisson</option>
+            <option value="Végétarien">🥦 Végétarien</option>
+            <option value="Pâtes">🍝 Pâtes</option>
+            <option value="Soupe">🍲 Soupe</option>
+            <option value="Pizza">🍕 Pizza</option>
+            <option value="Salade">🥗 Salade</option>
+            <option value="Autre">✨ Autre</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Temps (min)</label>
+          <input class="form-input" id="r-time" type="number" placeholder="30">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Emoji du plat</label>
+        <div class="emoji-picker" id="emoji-picker">
+          <button class="emoji-btn selected" data-e="🍗" onclick="selectEmoji(this)">🍗</button>
+          <button class="emoji-btn" data-e="🐟" onclick="selectEmoji(this)">🐟</button>
+          <button class="emoji-btn" data-e="🍝" onclick="selectEmoji(this)">🍝</button>
+          <button class="emoji-btn" data-e="🍕" onclick="selectEmoji(this)">🍕</button>
+          <button class="emoji-btn" data-e="🥗" onclick="selectEmoji(this)">🥗</button>
+          <button class="emoji-btn" data-e="🍲" onclick="selectEmoji(this)">🍲</button>
+          <button class="emoji-btn" data-e="🥩" onclick="selectEmoji(this)">🥩</button>
+          <button class="emoji-btn" data-e="🍛" onclick="selectEmoji(this)">🍛</button>
+          <button class="emoji-btn" data-e="🫕" onclick="selectEmoji(this)">🫕</button>
+          <button class="emoji-btn" data-e="🥘" onclick="selectEmoji(this)">🥘</button>
+          <button class="emoji-btn" data-e="🌮" onclick="selectEmoji(this)">🌮</button>
+          <button class="emoji-btn" data-e="🍔" onclick="selectEmoji(this)">🍔</button>
+          <button class="emoji-btn" data-e="🥚" onclick="selectEmoji(this)">🥚</button>
+          <button class="emoji-btn" data-e="🧆" onclick="selectEmoji(this)">🧆</button>
+          <button class="emoji-btn" data-e="🫔" onclick="selectEmoji(this)">🫔</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Note initiale</label>
+        <div class="star-rating" id="recipe-stars">
+          <button class="star-btn" data-v="1" onclick="setRecipeStar(1)">★</button>
+          <button class="star-btn" data-v="2" onclick="setRecipeStar(2)">★</button>
+          <button class="star-btn" data-v="3" onclick="setRecipeStar(3)">★</button>
+          <button class="star-btn" data-v="4" onclick="setRecipeStar(4)">★</button>
+          <button class="star-btn" data-v="5" onclick="setRecipeStar(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Favoris de</label>
+        <div class="persons-checkboxes" id="recipe-fav-persons"></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeRecipeModal()">Annuler</button>
+        <button class="btn-save" onclick="saveRecipe()">Ajouter la recette</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FAV MODAL -->
+<div class="modal-overlay" id="fav-modal">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-header">
+      <h2 class="modal-title">Ajouter un favori</h2>
+      <button class="modal-close" onclick="closeFavModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Choisir un plat</label>
+        <select class="form-input" id="fav-select"></select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-cancel" onclick="closeFavModal()">Annuler</button>
+        <button class="btn-save" onclick="addFav()">Ajouter</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ========== DATA ==========
+const PERSONS = [
+  { id:'charlotte', name:'Charlotte', color:'#C0603A', initials:'CH' },
+  { id:'julien',   name:'Julien',    color:'#3D5940', initials:'JU' },
+  { id:'lou',      name:'Lou',       color:'#D4A843', initials:'LO' },
+  { id:'timeo',    name:'Timéo',     color:'#6B8F71', initials:'TI' }
+];
+
+const DAYS = ['Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi','Dimanche'];
+const DAYS_SHORT = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+const MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+const MEAL_TYPES = [
+  { id:'midi', label:'Déjeuner', icon:'☀️' },
+  { id:'soir', label:'Dîner', icon:'🌙' }
+];
+
+let state = {
+  recipes: [
+    { id:1, name:'Poulet rôti aux herbes', cat:'Viande', emoji:'🍗', time:60, rating:5, favPersons:['charlotte','julien'], count:8 },
+    { id:2, name:'Spaghetti Bolognaise', cat:'Pâtes', emoji:'🍝', time:40, rating:4, favPersons:['lou','timeo'], count:12 },
+    { id:3, name:'Poisson au four', cat:'Poisson', emoji:'🐟', time:35, rating:4, favPersons:['charlotte'], count:5 },
+    { id:4, name:'Pizza maison', cat:'Pizza', emoji:'🍕', time:45, rating:5, favPersons:['timeo','lou','julien'], count:10 },
+    { id:5, name:'Soupe de légumes', cat:'Soupe', emoji:'🍲', time:30, rating:3, favPersons:['charlotte'], count:6 },
+    { id:6, name:'Salade César', cat:'Salade', emoji:'🥗', time:15, rating:4, favPersons:['charlotte','julien'], count:4 },
+    { id:7, name:'Bœuf bourguignon', cat:'Viande', emoji:'🥩', time:120, rating:5, favPersons:['julien'], count:3 },
+    { id:8, name:'Tacos maison', cat:'Autre', emoji:'🌮', time:30, rating:5, favPersons:['lou','timeo','julien','charlotte'], count:7 },
+  ],
+  meals: {}, // key: "YYYY-MM-DD-midi" => { recipe, persons, rating, recurrence }
+  persons: {
+    charlotte: { favs:['Poulet rôti aux herbes','Pizza maison','Salade César'] },
+    julien:    { favs:['Bœuf bourguignon','Spaghetti Bolognaise','Tacos maison'] },
+    lou:       { favs:['Pizza maison','Spaghetti Bolognaise','Tacos maison'] },
+    timeo:     { favs:['Pizza maison','Tacos maison','Spaghetti Bolognaise'] }
+  },
+  currentWeekOffset: 0,
+  currentMonthDate: new Date(),
+  filterPerson: null,
+  editingMeal: null,
+  mealStar: 0,
+  recipeStar: 0,
+  selectedEmoji: '🍗',
+  favPersonId: null,
+  nextId: 100
+};
+
+// Pre-populate some meals
+(function() {
+  const today = new Date();
+  const d = new Date(today);
+  // Go to Monday
+  d.setDate(d.getDate() - ((d.getDay()+6)%7));
+  const addMeal = (offset, type, recipe, persons, rating) => {
+    const day = new Date(d);
+    day.setDate(day.getDate() + offset);
+    const key = fmtDate(day) + '-' + type;
+    state.meals[key] = { recipe, persons, rating, recurrence:'' };
+  };
+  addMeal(0,'midi','Salade César',['charlotte','julien'],4);
+  addMeal(0,'soir','Pizza maison',['charlotte','julien','lou','timeo'],5);
+  addMeal(1,'midi','Spaghetti Bolognaise',['lou','timeo'],4);
+  addMeal(1,'soir','Poulet rôti aux herbes',['charlotte','julien','lou','timeo'],5);
+  addMeal(2,'midi','Soupe de légumes',['charlotte'],3);
+  addMeal(3,'soir','Tacos maison',['charlotte','julien','lou','timeo'],5);
+  addMeal(4,'midi','Poisson au four',['charlotte','julien'],4);
+  addMeal(5,'soir','Pizza maison',['charlotte','julien','lou','timeo'],5);
+  addMeal(6,'midi','Bœuf bourguignon',['julien'],5);
+})();
+
+function fmtDate(d) {
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function getMondayOfWeek(offset) {
+  const today = new Date();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - ((today.getDay()+6)%7) + offset*7);
+  monday.setHours(0,0,0,0);
+  return monday;
+}
+function personById(id) { return PERSONS.find(p=>p.id===id); }
+
+// ========== VIEWS ==========
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('nav button').forEach(el=>el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  const btns = document.querySelectorAll('nav button');
+  const map = ['week','month','recipes','persons','trends'];
+  btns[map.indexOf(v)]?.classList.add('active');
+  if (v==='week') renderWeek();
+  if (v==='month') renderMonth();
+  if (v==='recipes') renderRecipes();
+  if (v==='persons') renderPersons();
+  if (v==='trends') renderTrends();
+}
+
+// ========== WEEK VIEW ==========
+function changeWeek(d) {
+  state.currentWeekOffset += d;
+  renderWeek();
+}
+function renderWeek() {
+  const monday = getMondayOfWeek(state.currentWeekOffset);
+  const sunday = new Date(monday); sunday.setDate(monday.getDate()+6);
+  const fmt = d => d.getDate()+' '+MONTHS[d.getMonth()].slice(0,3);
+  document.getElementById('week-label').textContent = 'Semaine du '+fmt(monday)+' au '+fmt(sunday)+' '+sunday.getFullYear();
+
+  // Persons filter
+  const pf = document.getElementById('week-persons-filter');
+  pf.innerHTML = PERSONS.map(p=>`
+    <div class="person-filter ${state.filterPerson===p.id?'active':''}" style="color:${p.color}" onclick="togglePersonFilter('${p.id}')">
+      <div class="person-avatar" style="background:${p.color}">${p.initials}</div>
+      ${p.name}
+    </div>
+  `).join('');
+
+  const grid = document.getElementById('week-grid');
+  const today = fmtDate(new Date());
+  grid.innerHTML = '';
+  for (let i=0; i<7; i++) {
+    const day = new Date(monday);
+    day.setDate(monday.getDate()+i);
+    const dateStr = fmtDate(day);
+    const col = document.createElement('div');
+    col.className = 'day-col' + (dateStr===today?' today':'');
+    col.innerHTML = `
+      <div class="day-header">
+        <div class="day-name">${DAYS_SHORT[i]}</div>
+        <div class="day-num">${day.getDate()}</div>
+      </div>
+      ${MEAL_TYPES.map(mt => {
+        const key = dateStr+'-'+mt.id;
+        const meal = state.meals[key];
+        let html = '';
+        if (meal) {
+          const filtered = state.filterPerson ? meal.persons.includes(state.filterPerson) : true;
+          if (!filtered) { html = `<div class="meal-slot" onclick="openMealModal('${dateStr}','${mt.id}')"><div class="meal-type-label">${mt.icon} ${mt.label}</div><div style="color:var(--ink-light);font-size:0.8rem;text-align:center;padding:10px 0">—</div></div>`; }
+          else {
+            const stars = '★'.repeat(meal.rating||0)+'☆'.repeat(5-(meal.rating||0));
+            const avatars = meal.persons.map(pid=>{const p=personById(pid);return p?`<div class="mini-avatar" style="background:${p.color}">${p.initials}</div>`:''}).join('');
+            html = `<div class="meal-slot filled" onclick="openMealModal('${dateStr}','${mt.id}')">
+              ${meal.recurrence?'<span class="recurrence-badge">↺</span>':''}
+              <div class="meal-type-label">${mt.icon} ${mt.label}</div>
+              <div class="meal-name">${meal.recipe}</div>
+              <div class="meal-persons-icons">${avatars}</div>
+              <div class="rating-stars" style="color:var(--gold)">${stars}</div>
+            </div>`;
+          }
+        } else {
+          html = `<div class="meal-slot" onclick="openMealModal('${dateStr}','${mt.id}')">
+            <div class="meal-type-label">${mt.icon} ${mt.label}</div>
+            <div class="add-meal-btn">+</div>
+          </div>`;
+        }
+        return html;
+      }).join('')}
+    `;
+    grid.appendChild(col);
+  }
+}
+function togglePersonFilter(id) {
+  state.filterPerson = state.filterPerson===id ? null : id;
+  renderWeek();
+}
+
+// ========== MONTH VIEW ==========
+function changeMonth(d) {
+  state.currentMonthDate.setMonth(state.currentMonthDate.getMonth()+d);
+  renderMonth();
+}
+function renderMonth() {
+  const d = state.currentMonthDate;
+  document.getElementById('month-label').textContent = MONTHS[d.getMonth()]+' '+d.getFullYear();
+  const grid = document.getElementById('month-grid');
+  const today = fmtDate(new Date());
+  // Headers
+  let html = DAYS_SHORT.map(dn=>`<div class="month-day-header">${dn}</div>`).join('');
+  const first = new Date(d.getFullYear(), d.getMonth(), 1);
+  const last = new Date(d.getFullYear(), d.getMonth()+1, 0);
+  const startDow = (first.getDay()+6)%7;
+  const totalCells = startDow + last.getDate();
+  const rows = Math.ceil(totalCells/7);
+  for (let i=0; i<rows*7; i++) {
+    const dayNum = i - startDow + 1;
+    if (dayNum < 1 || dayNum > last.getDate()) {
+      html += `<div class="month-day other-month"></div>`;
+    } else {
+      const day = new Date(d.getFullYear(), d.getMonth(), dayNum);
+      const ds = fmtDate(day);
+      const isToday = ds===today;
+      const midi = state.meals[ds+'-midi'];
+      const soir = state.meals[ds+'-soir'];
+      html += `<div class="month-day${isToday?' today-month':''}" onclick="goToWeekOf('${ds}')">
+        <div class="month-day-num">${dayNum}</div>
+        ${midi?`<span class="month-meal-pill pill-midi">${midi.recipe}</span>`:''}
+        ${soir?`<span class="month-meal-pill pill-soir">${soir.recipe}</span>`:''}
+      </div>`;
+    }
+  }
+  grid.innerHTML = html;
+}
+function goToWeekOf(dateStr) {
+  const d = new Date(dateStr);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const todayMonday = new Date(today); todayMonday.setDate(today.getDate()-((today.getDay()+6)%7));
+  const targetMonday = new Date(d); targetMonday.setDate(d.getDate()-((d.getDay()+6)%7));
+  const diff = Math.round((targetMonday-todayMonday)/(7*86400000));
+  state.currentWeekOffset = diff;
+  showView('week');
+}
+
+// ========== MEAL MODAL ==========
+let mealModalData = {};
+function openMealModal(dateStr, type) {
+  mealModalData = { dateStr, type };
+  const key = dateStr+'-'+type;
+  const meal = state.meals[key];
+  const mt = MEAL_TYPES.find(m=>m.id===type);
+  const [y,mo,da] = dateStr.split('-');
+  const dayName = DAYS[(new Date(dateStr).getDay()+6)%7];
+  document.getElementById('meal-modal-title').textContent = `${mt.icon} ${mt.label} — ${dayName} ${parseInt(da)} ${MONTHS[parseInt(mo)-1]}`;
+  document.getElementById('meal-recipe-search').value = meal ? meal.recipe : '';
+  document.getElementById('meal-recurrence').value = meal ? (meal.recurrence||'') : '';
+  state.mealStar = meal ? (meal.rating||0) : 0;
+  updateMealStars();
+  const delBtn = document.getElementById('meal-del-btn');
+  delBtn.style.display = meal ? '' : 'none';
+  // Persons
+  const selPersons = meal ? meal.persons : ['charlotte','julien','lou','timeo'];
+  document.getElementById('meal-persons').innerHTML = PERSONS.map(p=>`
+    <div class="person-check ${selPersons.includes(p.id)?'selected':''}" style="color:${p.color}" onclick="toggleMealPerson(this,'${p.id}')">
+      <div class="person-avatar" style="background:${p.color}">${p.initials}</div> ${p.name}
+    </div>`).join('');
+  hideMealSuggestions();
+  document.getElementById('meal-modal').classList.add('open');
+}
+function closeMealModal() { document.getElementById('meal-modal').classList.remove('open'); }
+function toggleMealPerson(el, id) { el.classList.toggle('selected'); }
+function setMealStar(v) { state.mealStar=v; updateMealStars(); }
+function updateMealStars() {
+  document.querySelectorAll('#meal-stars .star-btn').forEach(b=>{ b.classList.toggle('lit', parseInt(b.dataset.v)<=state.mealStar); });
+}
+function filterMealRecipes() {
+  const q = document.getElementById('meal-recipe-search').value.toLowerCase();
+  const box = document.getElementById('meal-recipe-suggestions');
+  if (!q) { hideMealSuggestions(); return; }
+  const matches = state.recipes.filter(r=>r.name.toLowerCase().includes(q)).slice(0,6);
+  if (!matches.length) { hideMealSuggestions(); return; }
+  box.style.display='block';
+  box.innerHTML = matches.map(r=>`
+    <div onclick="selectMealRecipe('${r.name}')" style="padding:10px 14px;cursor:pointer;font-size:0.9rem;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);">
+      <span style="font-size:1.3rem">${r.emoji}</span> ${r.name} <span style="margin-left:auto;color:var(--gold);font-size:0.8rem">${'★'.repeat(r.rating)}</span>
+    </div>`).join('');
+}
+function hideMealSuggestions() { document.getElementById('meal-recipe-suggestions').style.display='none'; }
+function selectMealRecipe(name) { document.getElementById('meal-recipe-search').value=name; hideMealSuggestions(); }
+function saveMeal() {
+  const recipe = document.getElementById('meal-recipe-search').value.trim();
+  if (!recipe) { showToast('Veuillez indiquer un plat'); return; }
+  const persons = [...document.querySelectorAll('#meal-persons .person-check.selected')].map(el=>el.getAttribute('onclick').match(/'(\w+)'\)/)[1]);
+  const recurrence = document.getElementById('meal-recurrence').value;
+  const key = mealModalData.dateStr+'-'+mealModalData.type;
+  state.meals[key] = { recipe, persons, rating: state.mealStar, recurrence };
+  // Update recipe count
+  const rec = state.recipes.find(r=>r.name===recipe);
+  if (rec) rec.count++;
+  // Handle recurrence
+  if (recurrence) applyRecurrence(mealModalData.dateStr, mealModalData.type, recipe, persons, recurrence);
+  closeMealModal();
+  renderWeek();
+  showToast('Repas enregistré ✓');
+}
+function deleteMeal() {
+  const key = mealModalData.dateStr+'-'+mealModalData.type;
+  delete state.meals[key];
+  closeMealModal();
+  renderWeek();
+  showToast('Repas supprimé');
+}
+function applyRecurrence(dateStr, type, recipe, persons, freq) {
+  const base = new Date(dateStr);
+  const weeks = freq==='weekly'?12 : freq==='biweekly'?6 : 3;
+  const step = freq==='weekly'?7 : freq==='biweekly'?14 : 30;
+  for (let i=1; i<=weeks; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate()+step*i);
+    const k = fmtDate(d)+'-'+type;
+    if (!state.meals[k]) state.meals[k] = { recipe, persons, rating:0, recurrence: freq };
+  }
+}
+
+// ========== RECIPES VIEW ==========
+function renderRecipes() {
+  const q = document.getElementById('recipe-search').value.toLowerCase();
+  const cat = document.getElementById('recipe-cat').value;
+  const filtered = state.recipes.filter(r => {
+    if (q && !r.name.toLowerCase().includes(q)) return false;
+    if (cat && r.cat!==cat) return false;
+    return true;
+  });
+  const grid = document.getElementById('recipes-grid');
+  if (!filtered.length) { grid.innerHTML='<p style="color:var(--ink-muted);padding:20px">Aucune recette trouvée.</p>'; return; }
+  grid.innerHTML = filtered.map(r => {
+    const stars = '★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
+    const favPeople = r.favPersons.map(pid=>{const p=personById(pid);return p?`<div class="mini-avatar" style="background:${p.color}">${p.initials}</div>`:''}).join('');
+    const bg = { Viande:'#FAECE7', Poisson:'#E6F1FB', Végétarien:'#EAF3DE', Pâtes:'#FDF8F2', Soupe:'#F0EDD8', Pizza:'#FAECE7', Salade:'#EAF3DE', Autre:'#F5ECD7' }[r.cat]||'#F5ECD7';
+    return `<div class="recipe-card">
+      <div class="recipe-img" style="background:${bg}"><span style="font-size:4rem">${r.emoji}</span></div>
+      <div class="recipe-body">
+        <div class="recipe-category">${r.cat} · ${r.time} min</div>
+        <div class="recipe-title">${r.name}</div>
+        <div class="recipe-meta">
+          <span class="stars">${stars}</span>
+          <span class="recipe-count">Cuisinée ${r.count}×</span>
+        </div>
+        <div class="recipe-fav-persons">${favPeople}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openRecipeModal() {
+  document.getElementById('r-name').value='';
+  document.getElementById('r-time').value='';
+  state.recipeStar=0; updateRecipeStars();
+  state.selectedEmoji='🍗';
+  document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.toggle('selected',b.dataset.e==='🍗'));
+  document.getElementById('recipe-fav-persons').innerHTML = PERSONS.map(p=>`
+    <div class="person-check" style="color:${p.color}" onclick="this.classList.toggle('selected')">
+      <div class="person-avatar" style="background:${p.color}">${p.initials}</div> ${p.name}
+    </div>`).join('');
+  document.getElementById('recipe-modal').classList.add('open');
+}
+function closeRecipeModal() { document.getElementById('recipe-modal').classList.remove('open'); }
+function setRecipeStar(v) { state.recipeStar=v; updateRecipeStars(); }
+function updateRecipeStars() {
+  document.querySelectorAll('#recipe-stars .star-btn').forEach(b=>{ b.classList.toggle('lit', parseInt(b.dataset.v)<=state.recipeStar); });
+}
+function selectEmoji(btn) {
+  document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.selectedEmoji = btn.dataset.e;
+}
+function saveRecipe() {
+  const name = document.getElementById('r-name').value.trim();
+  if (!name) { showToast('Veuillez nommer la recette'); return; }
+  const favPersons = [...document.querySelectorAll('#recipe-fav-persons .person-check.selected')].map(el=>{
+    const m = el.getAttribute('onclick').match(/'(\w+)'\)/); return m?m[1]:null;
+  }).filter(Boolean);
+  state.recipes.push({
+    id: state.nextId++, name, cat: document.getElementById('r-cat').value,
+    emoji: state.selectedEmoji, time: parseInt(document.getElementById('r-time').value)||30,
+    rating: state.recipeStar, favPersons, count:0
+  });
+  closeRecipeModal();
+  renderRecipes();
+  showToast('Recette ajoutée ✓');
+}
+
+// ========== PERSONS VIEW ==========
+function renderPersons() {
+  const grid = document.getElementById('persons-grid');
+  grid.innerHTML = PERSONS.map(p => {
+    const pd = state.persons[p.id];
+    const meals = Object.values(state.meals).filter(m=>m.persons&&m.persons.includes(p.id)).length;
+    const favs = pd.favs.map(f=>`<span class="fav-tag">🍽️ ${f}</span>`).join('');
+    return `<div class="person-card">
+      <div class="person-header">
+        <div class="person-big-avatar" style="background:${p.color}">${p.initials}</div>
+        <div class="person-info">
+          <h3>${p.name}</h3>
+          <p>Membre de la famille</p>
+        </div>
+      </div>
+      <div class="fav-section">
+        <h4>Plats préférés</h4>
+        <div style="margin-bottom:8px">${favs}
+          <button class="add-fav" onclick="openFavModal('${p.id}')">+ Ajouter</button>
+        </div>
+      </div>
+      <div class="person-stats">
+        <div class="stat-box"><div class="stat-num">${meals}</div><div class="stat-label">Repas planifiés</div></div>
+        <div class="stat-box"><div class="stat-num">${pd.favs.length}</div><div class="stat-label">Plats favoris</div></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+function openFavModal(personId) {
+  state.favPersonId = personId;
+  const sel = document.getElementById('fav-select');
+  const existing = state.persons[personId].favs;
+  sel.innerHTML = state.recipes.filter(r=>!existing.includes(r.name)).map(r=>`<option value="${r.name}">${r.emoji} ${r.name}</option>`).join('');
+  document.getElementById('fav-modal').classList.add('open');
+}
+function closeFavModal() { document.getElementById('fav-modal').classList.remove('open'); }
+function addFav() {
+  const val = document.getElementById('fav-select').value;
+  if (!val) return;
+  state.persons[state.favPersonId].favs.push(val);
+  closeFavModal();
+  renderPersons();
+  showToast('Favori ajouté ✓');
+}
+
+// ========== TRENDS VIEW ==========
+function renderTrends() {
+  // Stats
+  const totalMeals = Object.keys(state.meals).length;
+  const allRecipes = state.recipes.length;
+  const avgRating = state.recipes.length ? (state.recipes.reduce((a,r)=>a+r.rating,0)/state.recipes.length).toFixed(1) : 0;
+  const recurring = Object.values(state.meals).filter(m=>m.recurrence).length;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card"><div class="stat-card-icon">🗓️</div><div class="stat-card-num">${totalMeals}</div><div class="stat-card-label">Repas planifiés</div></div>
+    <div class="stat-card"><div class="stat-card-icon">📖</div><div class="stat-card-num">${allRecipes}</div><div class="stat-card-label">Recettes</div></div>
+    <div class="stat-card"><div class="stat-card-icon">⭐</div><div class="stat-card-num">${avgRating}</div><div class="stat-card-label">Note moyenne</div></div>
+    <div class="stat-card"><div class="stat-card-icon">↺</div><div class="stat-card-num">${recurring}</div><div class="stat-card-label">Repas récurrents</div></div>
+  `;
+  // Top recipes
+  const top = [...state.recipes].sort((a,b)=>b.count-a.count).slice(0,5);
+  const maxCount = top[0]?.count||1;
+  const topHtml = top.map((r,i)=>`
+    <div class="trend-row">
+      <div class="trend-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+      <span style="font-size:1.2rem">${r.emoji}</span>
+      <span class="trend-name">${r.name}</span>
+      <div class="trend-bar-wrap"><div class="trend-bar" style="width:${Math.round(r.count/maxCount*100)}%"></div></div>
+      <span class="trend-score">${r.count}×</span>
+    </div>`).join('');
+
+  // Top rated
+  const topRated = [...state.recipes].sort((a,b)=>b.rating-a.rating||b.count-a.count).slice(0,5);
+  const ratedHtml = topRated.map((r,i)=>`
+    <div class="trend-row">
+      <div class="trend-rank ${i===0?'gold':i===1?'silver':i===2?'bronze':''}">${i+1}</div>
+      <span style="font-size:1.2rem">${r.emoji}</span>
+      <span class="trend-name">${r.name}</span>
+      <span style="color:var(--gold)">${'★'.repeat(r.rating)}</span>
+      <span class="trend-score">${r.rating}/5</span>
+    </div>`).join('');
+
+  // Fav per person
+  const personFavHtml = PERSONS.map(p=>`
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+      <div class="person-big-avatar" style="background:${p.color};width:36px;height:36px;font-size:0.85rem">${p.initials}</div>
+      <div>
+        <div style="font-weight:500;font-size:0.9rem">${p.name}</div>
+        <div style="font-size:0.8rem;color:var(--ink-muted)">${state.persons[p.id].favs.slice(0,2).join(', ')}</div>
+      </div>
+    </div>`).join('');
+
+  // Cat breakdown
+  const cats = {};
+  state.recipes.forEach(r=>{ cats[r.cat]=(cats[r.cat]||0)+r.count; });
+  const catSorted = Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+  const maxCat = catSorted[0]?.[1]||1;
+  const catEmojis = { Viande:'🥩', Poisson:'🐟', Végétarien:'🥦', Pâtes:'🍝', Soupe:'🍲', Pizza:'🍕', Salade:'🥗', Autre:'✨' };
+  const catHtml = catSorted.map((c,i)=>`
+    <div class="trend-row">
+      <div class="trend-rank ${i===0?'gold':''}">${i+1}</div>
+      <span style="font-size:1.2rem">${catEmojis[c[0]]||'🍽️'}</span>
+      <span class="trend-name">${c[0]}</span>
+      <div class="trend-bar-wrap"><div class="trend-bar" style="width:${Math.round(c[1]/maxCat*100)}%;background:var(--sage)"></div></div>
+      <span class="trend-score" style="color:var(--sage)">${c[1]}×</span>
+    </div>`).join('');
+
+  document.getElementById('trends-grid').innerHTML = `
+    <div class="trend-card"><div class="trend-title">🏆 Plats les plus cuisinés</div>${topHtml}</div>
+    <div class="trend-card"><div class="trend-title">⭐ Mieux notés</div>${ratedHtml}</div>
+    <div class="trend-card"><div class="trend-title">❤️ Favoris par personne</div>${personFavHtml}</div>
+    <div class="trend-card"><div class="trend-title">🍽️ Catégories préférées</div>${catHtml}</div>
+  `;
+}
+
+// ========== TOAST ==========
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+// ========== CLOSE MODALS ==========
+document.querySelectorAll('.modal-overlay').forEach(o=>{
+  o.addEventListener('click', e=>{ if(e.target===o) o.classList.remove('open'); });
+});
+document.addEventListener('click', e=>{
+  if (!document.getElementById('meal-recipe-suggestions').contains(e.target) && e.target.id!=='meal-recipe-search') hideMealSuggestions();
+});
+
+// ========== INIT ==========
+renderWeek();
+</script>
+</body>
+</html>
