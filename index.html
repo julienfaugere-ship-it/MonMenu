@@ -216,6 +216,35 @@
   .toast { position:fixed; bottom:24px; right:24px; background:var(--ink); color:var(--cream); padding:14px 20px; border-radius:var(--radius-sm); font-size:0.9rem; z-index:9999; transform:translateY(100px); opacity:0; transition:all 0.3s; pointer-events:none; }
   .toast.show { transform:translateY(0); opacity:1; }
 
+  /* APPAREIL */
+  .appareil-picker { display:flex; gap:8px; flex-wrap:wrap; }
+  .appareil-btn { background:var(--warm); border:1.5px solid transparent; padding:7px 13px; border-radius:20px; font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; transition:all 0.2s; color:var(--ink); }
+  .appareil-btn:hover { border-color:var(--terracotta); }
+  .appareil-btn.selected { border-color:var(--terracotta); background:rgba(192,96,58,0.12); font-weight:600; color:var(--terracotta); }
+  .appareil-tag { display:inline-block; font-size:0.7rem; padding:2px 8px; border-radius:10px; background:rgba(192,96,58,0.12); color:var(--terra-dark); font-weight:600; margin-top:4px; }
+
+  /* COURSES */
+  .course-item {
+    display:flex; align-items:center; gap:12px; padding:14px 18px;
+    background:var(--white); border-radius:var(--radius-sm); border:1px solid var(--border);
+    margin-bottom:8px; transition:all 0.2s;
+  }
+  .course-item:hover { border-color:var(--sage-light); }
+  .course-item.done { opacity:0.5; background:var(--cream); }
+  .course-item.done .course-name { text-decoration:line-through; color:var(--ink-muted); }
+  .course-check { width:22px; height:22px; border-radius:50%; border:2px solid var(--sage); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; transition:all 0.2s; background:none; font-size:0.75rem; color:white; }
+  .course-check.checked { background:var(--sage); border-color:var(--sage); }
+  .course-name { flex:1; font-size:0.95rem; }
+  .course-cat-pill { font-size:0.7rem; padding:3px 9px; border-radius:12px; background:var(--warm); color:var(--ink-muted); font-weight:500; }
+  .course-qty { width:36px; text-align:center; border:1px solid var(--border); border-radius:6px; font-family:'DM Sans',sans-serif; font-size:0.85rem; padding:3px; background:var(--cream); color:var(--ink); }
+  .course-del { background:none; border:none; cursor:pointer; color:var(--ink-light); font-size:1.1rem; padding:4px; transition:color 0.2s; }
+  .course-del:hover { color:var(--terracotta); }
+  .course-section-title { font-size:0.75rem; text-transform:uppercase; letter-spacing:0.1em; color:var(--ink-light); font-weight:600; margin:16px 0 8px; display:flex; align-items:center; gap:6px; }
+  .cat-tab { padding:7px 14px; border-radius:20px; border:1.5px solid var(--border); background:var(--white); font-family:'DM Sans',sans-serif; font-size:0.82rem; cursor:pointer; transition:all 0.2s; color:var(--ink-muted); }
+  .cat-tab.active { border-color:var(--sage); background:rgba(107,143,113,0.1); color:var(--sage-dark); font-weight:600; }
+  .summary-chip { display:flex; align-items:center; gap:6px; padding:8px 14px; border-radius:var(--radius-sm); background:var(--white); border:1px solid var(--border); font-size:0.85rem; }
+  .summary-num { font-family:'Playfair Display',serif; font-size:1.2rem; color:var(--terracotta); }
+
   /* RECURRENCE BADGE */
   .recurrence-badge { position:absolute; top:6px; right:6px; background:var(--gold); color:white; font-size:0.6rem; padding:2px 5px; border-radius:4px; font-weight:700; }
 
@@ -242,7 +271,10 @@
 <header>
   <div class="logo">
     <span class="logo-icon">🍽️</span>
-    MonMenu
+    <div>
+      <div>MonMenu</div>
+      <div style="font-family:'DM Sans',sans-serif;font-size:0.72rem;font-weight:400;color:var(--ink-light);letter-spacing:0.08em;text-transform:uppercase;margin-top:-2px">Famille Faugère</div>
+    </div>
   </div>
   <nav>
     <button class="active" onclick="showView('week')">Semaine</button>
@@ -250,6 +282,7 @@
     <button onclick="showView('recipes')">Recettes</button>
     <button onclick="showView('persons')">Famille</button>
     <button onclick="showView('trends')">Tendances</button>
+    <button onclick="showView('courses')">🛒 Courses</button>
   </nav>
 </header>
 
@@ -303,6 +336,15 @@
         <option value="Salade">🥗 Salade</option>
         <option value="Autre">✨ Autre</option>
       </select>
+      <select class="filter-select" id="recipe-app" onchange="renderRecipes()">
+        <option value="">Tous appareils</option>
+        <option value="">🍳 Classique</option>
+        <option value="Thermomix">🤖 Thermomix</option>
+        <option value="Cookeo">⚡ Cookeo</option>
+        <option value="Plancha">🔥 Plancha</option>
+        <option value="Four">🫙 Four</option>
+        <option value="Airfryer">💨 Airfryer</option>
+      </select>
       <button class="btn-add-recipe" onclick="openRecipeModal()">+ Ajouter une recette</button>
     </div>
     <div class="recipes-grid" id="recipes-grid"></div>
@@ -327,7 +369,55 @@
     <div class="trends-grid" id="trends-grid"></div>
   </div>
 
+  <!-- COURSES VIEW -->
+  <div class="view" id="view-courses">
+    <div class="page-header">
+      <h1 class="page-title">Liste de courses</h1>
+      <p class="page-sub">Ajoutez vos articles et cochez-les au fur et à mesure</p>
+    </div>
+
+    <!-- Add item bar -->
+    <div style="display:flex;gap:12px;margin-bottom:1.5rem;align-items:center;flex-wrap:wrap;">
+      <input class="search-input" id="course-input" placeholder="Ex: Lait, Tomates, Pain..." style="flex:1;min-width:200px" onkeydown="if(event.key==='Enter')addCourseItem()">
+      <select class="filter-select" id="course-cat-select">
+        <option value="Fruits & Légumes">🥦 Fruits & Légumes</option>
+        <option value="Viandes & Poissons">🥩 Viandes & Poissons</option>
+        <option value="Produits laitiers">🥛 Produits laitiers</option>
+        <option value="Épicerie">🫙 Épicerie</option>
+        <option value="Boulangerie">🥖 Boulangerie</option>
+        <option value="Surgelés">❄️ Surgelés</option>
+        <option value="Boissons">🧃 Boissons</option>
+        <option value="Hygiène">🧴 Hygiène</option>
+        <option value="Autre">📦 Autre</option>
+      </select>
+      <button class="btn-add-recipe" onclick="addCourseItem()">+ Ajouter</button>
+    </div>
+
+    <!-- Summary bar -->
+    <div id="courses-summary" style="display:flex;gap:12px;margin-bottom:1.5rem;flex-wrap:wrap;"></div>
+
+    <!-- Filter tabs -->
+    <div id="courses-cat-tabs" style="display:flex;gap:6px;margin-bottom:1.2rem;flex-wrap:wrap;"></div>
+
+    <!-- List -->
+    <div id="courses-list"></div>
+
+    <!-- Empty purchased section -->
+    <div id="courses-done-section" style="margin-top:2rem;display:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <span style="font-size:0.82rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-light);font-weight:600;">✓ Déjà dans le panier</span>
+        <button onclick="clearDone()" style="background:none;border:none;font-size:0.82rem;color:var(--terracotta);cursor:pointer;font-family:'DM Sans',sans-serif;">Vider</button>
+      </div>
+      <div id="courses-done-list"></div>
+    </div>
+  </div>
+
 </main>
+
+<footer style="text-align:center;padding:24px 16px;background:var(--ink);color:var(--ink-light);font-size:0.82rem;margin-top:3rem;">
+  <div style="font-family:'Playfair Display',serif;color:var(--cream);font-size:1rem;margin-bottom:4px;">MonMenu — Famille Faugère</div>
+  <div>© <span id="footer-year"></span> Julien Faugère — Tous droits réservés</div>
+</footer>
 
 <!-- MEAL MODAL -->
 <div class="modal-overlay" id="meal-modal">
@@ -354,6 +444,17 @@
           <button class="star-btn" data-v="3" onclick="setMealStar(3)">★</button>
           <button class="star-btn" data-v="4" onclick="setMealStar(4)">★</button>
           <button class="star-btn" data-v="5" onclick="setMealStar(5)">★</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Appareil de cuisson</label>
+        <div class="appareil-picker" id="meal-appareil">
+          <button class="appareil-btn" data-a="" onclick="selectMealAppareil(this)">🍳 Classique</button>
+          <button class="appareil-btn" data-a="Thermomix" onclick="selectMealAppareil(this)">🤖 Thermomix</button>
+          <button class="appareil-btn" data-a="Cookeo" onclick="selectMealAppareil(this)">⚡ Cookeo</button>
+          <button class="appareil-btn" data-a="Plancha" onclick="selectMealAppareil(this)">🔥 Plancha</button>
+          <button class="appareil-btn" data-a="Four" onclick="selectMealAppareil(this)">🫙 Four</button>
+          <button class="appareil-btn" data-a="Airfryer" onclick="selectMealAppareil(this)">💨 Airfryer</button>
         </div>
       </div>
       <div class="form-group">
@@ -403,6 +504,17 @@
         <div class="form-group">
           <label class="form-label">Temps (min)</label>
           <input class="form-input" id="r-time" type="number" placeholder="30">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Appareil de cuisson</label>
+        <div class="appareil-picker" id="recipe-appareil">
+          <button class="appareil-btn selected" data-a="" onclick="selectRecipeAppareil(this)">🍳 Classique</button>
+          <button class="appareil-btn" data-a="Thermomix" onclick="selectRecipeAppareil(this)">🤖 Thermomix</button>
+          <button class="appareil-btn" data-a="Cookeo" onclick="selectRecipeAppareil(this)">⚡ Cookeo</button>
+          <button class="appareil-btn" data-a="Plancha" onclick="selectRecipeAppareil(this)">🔥 Plancha</button>
+          <button class="appareil-btn" data-a="Four" onclick="selectRecipeAppareil(this)">🫙 Four</button>
+          <button class="appareil-btn" data-a="Airfryer" onclick="selectRecipeAppareil(this)">💨 Airfryer</button>
         </div>
       </div>
       <div class="form-group">
@@ -512,7 +624,9 @@ let state = {
   recipeStar: 0,
   selectedEmoji: '🍗',
   favPersonId: null,
-  nextId: 100
+  nextId: 100,
+  mealAppareil: '',
+  recipeAppareil: ''
 };
 
 // Pre-populate some meals
@@ -556,13 +670,14 @@ function showView(v) {
   document.querySelectorAll('nav button').forEach(el=>el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
   const btns = document.querySelectorAll('nav button');
-  const map = ['week','month','recipes','persons','trends'];
+  const map = ['week','month','recipes','persons','trends','courses'];
   btns[map.indexOf(v)]?.classList.add('active');
   if (v==='week') renderWeek();
   if (v==='month') renderMonth();
   if (v==='recipes') renderRecipes();
   if (v==='persons') renderPersons();
   if (v==='trends') renderTrends();
+  if (v==='courses') renderCourses();
 }
 
 // ========== WEEK VIEW ==========
@@ -609,10 +724,12 @@ function renderWeek() {
           else {
             const stars = '★'.repeat(meal.rating||0)+'☆'.repeat(5-(meal.rating||0));
             const avatars = meal.persons.map(pid=>{const p=personById(pid);return p?`<div class="mini-avatar" style="background:${p.color}">${p.initials}</div>`:''}).join('');
+            const appLabel = meal.appareil ? `<span class="appareil-tag">${{Thermomix:'🤖',Cookeo:'⚡',Plancha:'🔥',Four:'🫙',Airfryer:'💨'}[meal.appareil]||''} ${meal.appareil}</span>` : '';
             html = `<div class="meal-slot filled" onclick="openMealModal('${dateStr}','${mt.id}')">
               ${meal.recurrence?'<span class="recurrence-badge">↺</span>':''}
               <div class="meal-type-label">${mt.icon} ${mt.label}</div>
               <div class="meal-name">${meal.recipe}</div>
+              ${appLabel}
               <div class="meal-persons-icons">${avatars}</div>
               <div class="rating-stars" style="color:var(--gold)">${stars}</div>
             </div>`;
@@ -694,6 +811,7 @@ function openMealModal(dateStr, type) {
   document.getElementById('meal-recurrence').value = meal ? (meal.recurrence||'') : '';
   state.mealStar = meal ? (meal.rating||0) : 0;
   updateMealStars();
+  setMealAppareil(meal ? (meal.appareil||'') : '');
   const delBtn = document.getElementById('meal-del-btn');
   delBtn.style.display = meal ? '' : 'none';
   // Persons
@@ -725,13 +843,29 @@ function filterMealRecipes() {
 }
 function hideMealSuggestions() { document.getElementById('meal-recipe-suggestions').style.display='none'; }
 function selectMealRecipe(name) { document.getElementById('meal-recipe-search').value=name; hideMealSuggestions(); }
+function selectMealAppareil(btn) {
+  document.querySelectorAll('#meal-appareil .appareil-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.mealAppareil = btn.dataset.a;
+}
+function selectRecipeAppareil(btn) {
+  document.querySelectorAll('#recipe-appareil .appareil-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  state.recipeAppareil = btn.dataset.a;
+}
+function setMealAppareil(val) {
+  state.mealAppareil = val;
+  document.querySelectorAll('#meal-appareil .appareil-btn').forEach(b=>{
+    b.classList.toggle('selected', b.dataset.a===val);
+  });
+}
 function saveMeal() {
   const recipe = document.getElementById('meal-recipe-search').value.trim();
   if (!recipe) { showToast('Veuillez indiquer un plat'); return; }
   const persons = [...document.querySelectorAll('#meal-persons .person-check.selected')].map(el=>el.getAttribute('onclick').match(/'(\w+)'\)/)[1]);
   const recurrence = document.getElementById('meal-recurrence').value;
   const key = mealModalData.dateStr+'-'+mealModalData.type;
-  state.meals[key] = { recipe, persons, rating: state.mealStar, recurrence };
+  state.meals[key] = { recipe, persons, rating: state.mealStar, recurrence, appareil: state.mealAppareil };
   // Update recipe count
   const rec = state.recipes.find(r=>r.name===recipe);
   if (rec) rec.count++;
@@ -764,9 +898,11 @@ function applyRecurrence(dateStr, type, recipe, persons, freq) {
 function renderRecipes() {
   const q = document.getElementById('recipe-search').value.toLowerCase();
   const cat = document.getElementById('recipe-cat').value;
+  const app = document.getElementById('recipe-app').value;
   const filtered = state.recipes.filter(r => {
     if (q && !r.name.toLowerCase().includes(q)) return false;
     if (cat && r.cat!==cat) return false;
+    if (app && (r.appareil||'')!==app) return false;
     return true;
   });
   const grid = document.getElementById('recipes-grid');
@@ -775,10 +911,12 @@ function renderRecipes() {
     const stars = '★'.repeat(r.rating)+'☆'.repeat(5-r.rating);
     const favPeople = r.favPersons.map(pid=>{const p=personById(pid);return p?`<div class="mini-avatar" style="background:${p.color}">${p.initials}</div>`:''}).join('');
     const bg = { Viande:'#FAECE7', Poisson:'#E6F1FB', Végétarien:'#EAF3DE', Pâtes:'#FDF8F2', Soupe:'#F0EDD8', Pizza:'#FAECE7', Salade:'#EAF3DE', Autre:'#F5ECD7' }[r.cat]||'#F5ECD7';
+    const appIcons = {Thermomix:'🤖',Cookeo:'⚡',Plancha:'🔥',Four:'🫙',Airfryer:'💨'};
+    const appTag = r.appareil ? `<span class="appareil-tag">${appIcons[r.appareil]||''} ${r.appareil}</span>` : '';
     return `<div class="recipe-card">
       <div class="recipe-img" style="background:${bg}"><span style="font-size:4rem">${r.emoji}</span></div>
       <div class="recipe-body">
-        <div class="recipe-category">${r.cat} · ${r.time} min</div>
+        <div class="recipe-category">${r.cat} · ${r.time} min ${appTag}</div>
         <div class="recipe-title">${r.name}</div>
         <div class="recipe-meta">
           <span class="stars">${stars}</span>
@@ -794,7 +932,9 @@ function openRecipeModal() {
   document.getElementById('r-time').value='';
   state.recipeStar=0; updateRecipeStars();
   state.selectedEmoji='🍗';
+  state.recipeAppareil='';
   document.querySelectorAll('.emoji-btn').forEach(b=>b.classList.toggle('selected',b.dataset.e==='🍗'));
+  document.querySelectorAll('#recipe-appareil .appareil-btn').forEach(b=>b.classList.toggle('selected',b.dataset.a===''));
   document.getElementById('recipe-fav-persons').innerHTML = PERSONS.map(p=>`
     <div class="person-check" style="color:${p.color}" onclick="this.classList.toggle('selected')">
       <div class="person-avatar" style="background:${p.color}">${p.initials}</div> ${p.name}
@@ -820,7 +960,7 @@ function saveRecipe() {
   state.recipes.push({
     id: state.nextId++, name, cat: document.getElementById('r-cat').value,
     emoji: state.selectedEmoji, time: parseInt(document.getElementById('r-time').value)||30,
-    rating: state.recipeStar, favPersons, count:0
+    rating: state.recipeStar, favPersons, count:0, appareil: state.recipeAppareil
   });
   closeRecipeModal();
   renderRecipes();
@@ -956,6 +1096,118 @@ document.querySelectorAll('.modal-overlay').forEach(o=>{
 document.addEventListener('click', e=>{
   if (!document.getElementById('meal-recipe-suggestions').contains(e.target) && e.target.id!=='meal-recipe-search') hideMealSuggestions();
 });
+
+// ========== COURSES ==========
+const CAT_ICONS = {'Fruits & Légumes':'🥦','Viandes & Poissons':'🥩','Produits laitiers':'🥛','Épicerie':'🫙','Boulangerie':'🥖','Surgelés':'❄️','Boissons':'🧃','Hygiène':'🧴','Autre':'📦'};
+state.courses = [
+  { id:1, name:'Lait', cat:'Produits laitiers', qty:2, done:false },
+  { id:2, name:'Tomates', cat:'Fruits & Légumes', qty:1, done:false },
+  { id:3, name:'Pain de mie', cat:'Boulangerie', qty:1, done:true },
+];
+state.courseFilter = 'all';
+state.courseNextId = 200;
+
+function addCourseItem() {
+  const name = document.getElementById('course-input').value.trim();
+  if (!name) { showToast('Écrivez un article à ajouter'); return; }
+  const cat = document.getElementById('course-cat-select').value;
+  state.courses.push({ id: state.courseNextId++, name, cat, qty:1, done:false });
+  document.getElementById('course-input').value = '';
+  renderCourses();
+  showToast('Article ajouté ✓');
+}
+
+function toggleCourse(id) {
+  const item = state.courses.find(c=>c.id===id);
+  if (item) item.done = !item.done;
+  renderCourses();
+}
+
+function deleteCourse(id) {
+  state.courses = state.courses.filter(c=>c.id!==id);
+  renderCourses();
+}
+
+function clearDone() {
+  state.courses = state.courses.filter(c=>!c.done);
+  renderCourses();
+  showToast('Articles achetés supprimés');
+}
+
+function setCourseFilter(cat) {
+  state.courseFilter = cat;
+  renderCourses();
+}
+
+function changeCourseQty(id, delta) {
+  const item = state.courses.find(c=>c.id===id);
+  if (item) { item.qty = Math.max(1, (item.qty||1)+delta); renderCourses(); }
+}
+
+function renderCourses() {
+  const pending = state.courses.filter(c=>!c.done);
+  const done = state.courses.filter(c=>c.done);
+
+  // Summary
+  const cats = [...new Set(pending.map(c=>c.cat))];
+  document.getElementById('courses-summary').innerHTML = `
+    <div class="summary-chip"><span class="summary-num">${pending.length}</span> article${pending.length>1?'s':''} restant${pending.length>1?'s':''}</div>
+    <div class="summary-chip"><span class="summary-num">${done.length}</span> dans le panier</div>
+    <div class="summary-chip"><span class="summary-num">${cats.length}</span> rayon${cats.length>1?'s':''}</div>
+  `;
+
+  // Category tabs
+  const allCats = [...new Set(state.courses.map(c=>c.cat))];
+  document.getElementById('courses-cat-tabs').innerHTML =
+    `<button class="cat-tab ${state.courseFilter==='all'?'active':''}" onclick="setCourseFilter('all')">Tout (${pending.length})</button>` +
+    allCats.map(cat => {
+      const cnt = pending.filter(c=>c.cat===cat).length;
+      return `<button class="cat-tab ${state.courseFilter===cat?'active':''}" onclick="setCourseFilter('${cat}')">${CAT_ICONS[cat]||'📦'} ${cat} (${cnt})</button>`;
+    }).join('');
+
+  // Pending items grouped by category
+  const filtered = state.courseFilter==='all' ? pending : pending.filter(c=>c.cat===state.courseFilter);
+  const grouped = {};
+  filtered.forEach(c=>{ if(!grouped[c.cat]) grouped[c.cat]=[]; grouped[c.cat].push(c); });
+
+  let html = '';
+  Object.entries(grouped).forEach(([cat, items]) => {
+    if (state.courseFilter==='all') html += `<div class="course-section-title">${CAT_ICONS[cat]||'📦'} ${cat}</div>`;
+    items.forEach(item => {
+      html += `<div class="course-item" id="ci-${item.id}">
+        <button class="course-check" onclick="toggleCourse(${item.id})"></button>
+        <span class="course-name">${item.name}</span>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <button onclick="changeCourseQty(${item.id},-1)" style="background:none;border:1px solid var(--border);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:0.9rem;color:var(--ink-muted);">−</button>
+          <span style="font-size:0.9rem;font-weight:500;min-width:20px;text-align:center">${item.qty}</span>
+          <button onclick="changeCourseQty(${item.id},1)" style="background:none;border:1px solid var(--border);border-radius:6px;width:24px;height:24px;cursor:pointer;font-size:0.9rem;color:var(--ink-muted);">+</button>
+        </div>
+        <span class="course-cat-pill">${CAT_ICONS[cat]||'📦'}</span>
+        <button class="course-del" onclick="deleteCourse(${item.id})">✕</button>
+      </div>`;
+    });
+  });
+  if (!filtered.length) html = '<p style="color:var(--ink-muted);padding:20px;text-align:center">🎉 Rien à acheter dans cette catégorie !</p>';
+  document.getElementById('courses-list').innerHTML = html;
+
+  // Done section
+  const doneSection = document.getElementById('courses-done-section');
+  if (done.length) {
+    doneSection.style.display='block';
+    document.getElementById('courses-done-list').innerHTML = done.map(item=>`
+      <div class="course-item done">
+        <button class="course-check checked" onclick="toggleCourse(${item.id})">✓</button>
+        <span class="course-name">${item.name}</span>
+        <span class="course-cat-pill">${CAT_ICONS[item.cat]||'📦'} ${item.cat}</span>
+        <button class="course-del" onclick="deleteCourse(${item.id})">✕</button>
+      </div>`).join('');
+  } else {
+    doneSection.style.display='none';
+  }
+}
+
+// Footer year
+document.getElementById('footer-year').textContent = new Date().getFullYear();
 
 // ========== INIT ==========
 renderWeek();
