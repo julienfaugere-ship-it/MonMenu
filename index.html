@@ -154,7 +154,9 @@ select.filter-select{padding:11px 10px;border:1px solid var(--border);border-rad
 .person-info h3{font-family:'Playfair Display',serif;font-size:1.15rem;}
 .person-info p{color:var(--ink-muted);font-size:0.8rem;}
 .fav-section h4{font-size:0.72rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--ink-muted);font-weight:600;margin-bottom:7px;}
-.fav-tag{display:inline-block;padding:4px 9px;border-radius:20px;background:var(--warm);font-size:0.78rem;margin:2px;border:1px solid var(--border);}
+.fav-tag{display:inline-flex;align-items:center;gap:5px;padding:4px 8px 4px 9px;border-radius:20px;background:var(--warm);font-size:0.78rem;margin:2px;border:1px solid var(--border);}
+.fav-del-btn{background:none;border:none;cursor:pointer;color:var(--ink-light);font-size:0.7rem;line-height:1;padding:1px 2px;border-radius:50%;transition:all 0.15s;touch-action:manipulation;}
+.fav-del-btn:hover,.fav-del-btn:active{color:var(--terracotta);background:rgba(192,96,58,0.12);}
 .add-fav{background:none;border:1.5px dashed var(--border);padding:4px 9px;border-radius:20px;font-size:0.78rem;cursor:pointer;color:var(--ink-muted);font-family:'DM Sans',sans-serif;margin:2px;touch-action:manipulation;}
 .add-fav:active{border-color:var(--terracotta);color:var(--terracotta);}
 .person-stats{margin-top:12px;display:flex;gap:8px;}
@@ -943,9 +945,35 @@ function renderPersons(){
   grid.innerHTML=PERSONS.map(p=>{
     const pd=state.persons[p.id]||{favs:[]};
     const meals=Object.values(state.meals).filter(m=>m.persons&&m.persons.includes(p.id)).length;
-    return`<div class="person-card"><div class="person-header"><div class="person-big-avatar" style="background:${p.color}">${p.initials}</div><div class="person-info"><h3>${p.name}</h3><p>Famille Faugère</p></div></div><div class="fav-section"><h4>Plats préférés</h4><div>${(pd.favs||[]).map(f=>`<span class="fav-tag">🍽️ ${f}</span>`).join('')}<button class="add-fav" onclick="openFavModal('${p.id}')">+ Ajouter</button></div></div><div class="person-stats"><div class="stat-box"><div class="stat-num">${meals}</div><div class="stat-label">Repas planifiés</div></div><div class="stat-box"><div class="stat-num">${(pd.favs||[]).length}</div><div class="stat-label">Plats favoris</div></div></div></div>`;
+    const favTags=(pd.favs||[]).map((f,i)=>`
+      <span class="fav-tag">
+        🍽️ ${f}
+        <button class="fav-del-btn" onclick="deleteFav('${p.id}',${i})" title="Supprimer">✕</button>
+      </span>`).join('');
+    return`<div class="person-card">
+      <div class="person-header">
+        <div class="person-big-avatar" style="background:${p.color}">${p.initials}</div>
+        <div class="person-info"><h3>${p.name}</h3><p>Famille Faugère</p></div>
+      </div>
+      <div class="fav-section">
+        <h4>Plats préférés</h4>
+        <div>${favTags}<button class="add-fav" onclick="openFavModal('${p.id}')">+ Ajouter</button></div>
+      </div>
+      <div class="person-stats">
+        <div class="stat-box"><div class="stat-num">${meals}</div><div class="stat-label">Repas planifiés</div></div>
+        <div class="stat-box"><div class="stat-num">${(pd.favs||[]).length}</div><div class="stat-label">Plats favoris</div></div>
+      </div>
+    </div>`;
   }).join('');
 }
+
+window.deleteFav=async function(pid, index){
+  const pd=state.persons[pid]||{favs:[]};
+  const newFavs=(pd.favs||[]).filter((_,i)=>i!==index);
+  showSync('Mise à jour…');
+  await setDoc(doc(db,'persons',pid),{...pd,favs:newFavs});
+  showToast('Favori supprimé');
+};
 window.openFavModal=function(pid){
   state.favPersonId=pid;
   const ex=(state.persons[pid]?.favs||[]);
